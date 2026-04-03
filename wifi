@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تأكيد الـ PIN</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .input-group {
+            margin: 20px 0;
+            position: relative;
+        }
+        input {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            letter-spacing: 5px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #b8daff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 تأكيد الـ PIN</h1>
+        <p>دخل الـ PIN ديال اللي حداك</p>
+        
+        <div class="input-group">
+            <input type="password" id="pinInput" maxlength="4" placeholder="____">
+        </div>
+        
+        <button class="btn" id="verifyBtn" onclick="verifyPin()">تأكيد</button>
+        
+        <div id="message"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase Config (غيرها بـ config ديالك)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:xxxxxxxxxxxxxxxx"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let currentLocation = null;
+
+        // طلب الموقع
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        currentLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                            timestamp: new Date().toISOString()
+                        };
+                        document.getElementById('message').innerHTML = 
+                            '<div class="message info">📍 تم تحديد موقعك بنجاح</div>';
+                    },
+                    (error) => {
+                        console.error('خطأ في الموقع:', error);
+                        document.getElementById('message').innerHTML = 
+                            '<div class="message error">❌ فعّل GPS باش نقدرو نحددو موقعك</div>';
+                    }
+                );
+            }
+        }
+
+        // التحقق من الـ PIN
+        window.verifyPin = async function() {
+            const pin = document.getElementById('pinInput').value;
+            const btn = document.getElementById('verifyBtn');
+            const messageDiv = document.getElementById('message');
+
+            if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+                messageDiv.innerHTML = '<div class="message error">❌ الـ PIN لازم يكون 4 أرقام</div>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'جاري التحقق...';
+
+            try {
+                // البحث عن الـ PIN في Firebase
+                const pinRef = doc(db, 'pins', pin);
+                const pinSnap = await getDoc(pinRef);
+
+                if (pinSnap.exists()) {
+                    const data = pinSnap.data();
+                    
+                    // حفظ الموقع مع الـ PIN
+                    if (currentLocation) {
+                        await setDoc(doc(db, 'locations', Date.now().toString()), {
+                            pin: pin,
+                            name: data.name || 'مجهول',
+                            phone: data.phone || '',
+                            location: currentLocation,
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+
+                    messageDiv.innerHTML = `
+                        <div class="message success">
+                            ✅ تم التأكيد بنجاح!<br>
+                            👤 ${data.name || 'مجهول'}<br>
+                            📞 ${data.phone || 'غير متوفر'}<br>
+                            📍 تم حفظ الموقع
+                        </div>
+                    `;
+                    document.getElementById('pinInput').value = '';
+                } else {
+                    messageDiv.innerHTML = '<div class="message error">❌ PIN غير صحيح</div>';
+                }
+            } catch (error) {
+                console.error('خطأ:', error);
+                messageDiv.innerHTML = '<div class="message error">❌ خطأ في الاتصال</div>';
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'تأكيد';
+        };
+
+        // Enter key support
+        document.getElementById('pinInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                verifyPin();
+            }
+        });
+
+        // بداية طلب الموقع
+        getLocation();
+    </script>
+</body>
+</html>
